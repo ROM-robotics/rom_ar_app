@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AR Robot Controller</string>
+    <string name="title_connection">Connection Settings</string>
+    <string name="settings">Settings</string>
+    <string name="refresh">Refresh</string>
+    <string name="emergency_stop">Emergency Stop</string>
+    <string name="connecting">Connecting to Robot…</string>
+    <string name="loading_hint">Make sure the web server is running\non the robot PC</string>
+    <string name="connection_failed">Connection Failed</string>
+    <string name="connection_failed_hint">Cannot reach the robot\'s web server.\nCheck IP address and network connection.</string>
+    <string name="retry">Retry</string>
+    <string name="open_settings">Connection Settings</string>
+    <string name="connection_description">Enter the robot PC\'s IP address and ports.\nYour phone and robot must be on the same WiFi network.</string>
+    <string name="hint_robot_ip">Robot PC IP Address</string>
+    <string name="hint_ws_port">WebSocket Port (rosbridge)</string>
+    <string name="hint_web_port">Web Server Port</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="save_connect">Save &amp; Connect</string>
+    <string name="reset_defaults">Reset to Defaults</string>
+</resources>

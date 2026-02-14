@@ -1,0 +1,26 @@
+# AR Robot Controller Configuration
+
+# Gesture mapping thresholds
+gesture_controller:
+  ros__parameters:
+    # Maximum linear velocity (m/s)
+    max_linear_vel: 0.5
+    # Maximum angular velocity (rad/s)
+    max_angular_vel: 1.0
+    # Dead zone for hand position (0.0 - 1.0)
+    dead_zone: 0.15
+    # Smoothing factor (0.0 = no smoothing, 1.0 = max smoothing)
+    smoothing: 0.3
+    # Publishing rate (Hz)
+    publish_rate: 20.0
+    # Emergency stop gesture: open palm with all fingers spread
+    emergency_stop_enabled: true
+
+# Gesture definitions
+# FIST         -> Stop
+# INDEX_POINT  -> Forward
+# TWO_FINGERS  -> Backward  
+# OPEN_HAND    -> Emergency Stop
+# THUMB_LEFT   -> Turn Left
+# THUMB_RIGHT  -> Turn Right
+# PINCH        -> Speed control (distance between thumb and index)
