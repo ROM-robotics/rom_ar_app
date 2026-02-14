@@ -33,11 +33,10 @@
         android:pathData="M51,20 A3,3 0 1,1 57,20 A3,3 0 1,1 51,20" />
     <!-- Hand icon -->
     <path
-        android:fillColor="#FF6B6B"
+        android:fillColor="@android:color/transparent"
         android:pathData="M80,55 L80,45 C80,43.5 81.5,42 83,42 C84.5,42 86,43.5 86,45 L86,60 C86,66 82,72 76,72 L70,72"
         android:strokeWidth="2.5"
-        android:strokeColor="#FF6B6B"
-        android:fillColor="@android:color/transparent" />
+        android:strokeColor="#FF6B6B" />
     <!-- Wheels -->
     <path
         android:fillColor="#00C8FF"
