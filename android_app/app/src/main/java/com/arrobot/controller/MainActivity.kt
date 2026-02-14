@@ -211,7 +211,12 @@ class MainActivity : AppCompatActivity() {
                 fileUploadCallback = filePathCallback
                 val intent = fileChooserParams?.createIntent()
                 try {
-                    startActivityForResult(intent, FILE_CHOOSER_CODE)
+                    if (intent != null) {
+                        startActivityForResult(intent, FILE_CHOOSER_CODE)
+                    } else {
+                        fileUploadCallback = null
+                        return false
+                    }
                 } catch (e: Exception) {
                     fileUploadCallback = null
                     return false
