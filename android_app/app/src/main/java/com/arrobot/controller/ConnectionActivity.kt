@@ -1,6 +1,7 @@
 package com.arrobot.controller
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
@@ -30,6 +31,9 @@ class ConnectionActivity : AppCompatActivity() {
         private const val DEFAULT_WEB_PORT = "8080"
     }
 
+    // Track whether this was launched from MainActivity settings
+    private var isFromSettings = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -38,10 +42,13 @@ class ConnectionActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+        // Check if launched from MainActivity settings button
+        isFromSettings = intent.getBooleanExtra("from_settings", false)
+
         // Set toolbar
         setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Connection Settings"
+        supportActionBar?.setDisplayHomeAsUpEnabled(isFromSettings)
+        supportActionBar?.title = if (isFromSettings) "Connection Settings" else "AR Robot Controller"
 
         // Load saved values
         loadSettings()
@@ -108,7 +115,17 @@ class ConnectionActivity : AppCompatActivity() {
             .apply()
 
         Toast.makeText(this, "✅ Settings saved!", Toast.LENGTH_SHORT).show()
-        finish()
+
+        if (isFromSettings) {
+            // Return to MainActivity which will reload with new settings
+            setResult(RESULT_OK)
+            finish()
+        } else {
+            // Launch MainActivity (first time / from launcher)
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun resetDefaults() {

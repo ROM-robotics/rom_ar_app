@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
         private const val FILE_CHOOSER_CODE = 200
+        private const val SETTINGS_REQUEST_CODE = 300
         private const val PREFS_NAME = "ar_robot_prefs"
         private const val KEY_ROBOT_IP = "robot_ip"
         private const val KEY_WS_PORT = "ws_port"
@@ -105,7 +106,9 @@ class MainActivity : AppCompatActivity() {
         // Settings button
         binding.btnSettings.setOnClickListener {
             val intent = Intent(this, ConnectionActivity::class.java)
-            startActivity(intent)
+            intent.putExtra("from_settings", true)
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, SETTINGS_REQUEST_CODE)
         }
 
         // Refresh button
@@ -362,10 +365,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         setupFullscreen()
-        // Reload if settings changed
-        if (::prefs.isInitialized) {
-            injectConnectionConfig()
-        }
     }
 
     override fun onBackPressed() {
@@ -389,6 +388,9 @@ class MainActivity : AppCompatActivity() {
                 WebChromeClient.FileChooserParams.parseResult(resultCode, data)
             )
             fileUploadCallback = null
+        } else if (requestCode == SETTINGS_REQUEST_CODE) {
+            // Reload web app with new connection settings
+            loadApp()
         }
     }
 }
