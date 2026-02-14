@@ -18,4 +18,5 @@
     <string name="test_connection">Test Connection</string>
     <string name="save_connect">Save &amp; Connect</string>
     <string name="reset_defaults">Reset to Defaults</string>
+    <string name="company_name">ROM-Dynamics Co.,Ltd</string>
 </resources>

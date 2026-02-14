@@ -134,6 +134,8 @@ jobs:
             echo "body<<EOF"
             echo "## 🤖 AR Robot Controller Android App v${VERSION}"
             echo ""
+            echo "**ROM-Dynamics Co.,Ltd**"
+            echo ""
             echo "### 📱 Download"
             echo "- **debug APK**: ata ကို Install & test ရိုးရိုးလုပ်ချင်ရင်"
             echo "- **release APK**: Production-ready (minified)"
