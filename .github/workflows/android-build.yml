@@ -1,0 +1,168 @@
+name: Android Build & Release
+
+on:
+  push:
+    tags:
+      - 'android-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#android-v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🏷️ Tag: $TAG"
+          echo "📦 Version: $VERSION"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Update version in build.gradle.kts
+        working-directory: android_app
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Extract version parts (e.g., 1.2.3 → versionCode=10203)
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          
+          sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" app/build.gradle.kts
+          sed -i "s/versionName = .*/versionName = \"$VERSION\"/" app/build.gradle.kts
+          
+          echo "✅ versionName=$VERSION, versionCode=$VERSION_CODE"
+          grep -E "version(Code|Name)" app/build.gradle.kts
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        working-directory: android_app
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        working-directory: android_app
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Build Release APK
+        working-directory: android_app
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Sign Release APK (debug key for now)
+        working-directory: android_app
+        run: |
+          # Use debug keystore for unsigned release builds
+          # For production, replace with your own keystore via GitHub Secrets
+          RELEASE_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          if [ -f "$RELEASE_APK" ]; then
+            # Align
+            ${ANDROID_HOME}/build-tools/34.0.0/zipalign -v -p 4 \
+              "$RELEASE_APK" app-release-aligned.apk
+            
+            # Sign with debug key
+            ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign \
+              --ks ~/.android/debug.keystore \
+              --ks-key-alias androiddebugkey \
+              --ks-pass pass:android \
+              --key-pass pass:android \
+              --out app-release-signed.apk \
+              app-release-aligned.apk
+            
+            echo "✅ Release APK signed (debug key)"
+          fi
+
+      - name: Rename APKs
+        working-directory: android_app
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Debug APK
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             "ARRobotController-${VERSION}-debug.apk"
+          
+          # Release APK
+          if [ -f "app-release-signed.apk" ]; then
+            cp app-release-signed.apk \
+               "ARRobotController-${VERSION}-release.apk"
+          fi
+          
+          ls -lh ARRobotController-*.apk
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          {
+            echo "body<<EOF"
+            echo "## 🤖 AR Robot Controller Android App v${VERSION}"
+            echo ""
+            echo "### 📱 Download"
+            echo "- **debug APK**: ata ကို Install & test ရိုးရိုးလုပ်ချင်ရင်"
+            echo "- **release APK**: Production-ready (minified)"
+            echo ""
+            echo "### ✨ Features"
+            echo "- ✋ MediaPipe Hand Gesture → ROS2 /cmd_vel control"
+            echo "- 🕹️ Virtual Joystick (touch fallback)"
+            echo "- 📡 Real-time LiDAR visualization overlay"
+            echo "- 🛑 Emergency Stop (gesture + native button)"
+            echo "- ⚙️ Connection Settings (Robot IP, ports)"
+            echo "- 📳 Native haptic feedback"
+            echo "- 🔒 Auto camera permission handling"
+            echo "- 📺 Immersive fullscreen mode"
+            echo ""
+            echo "### 🔧 Setup"
+            echo "1. Robot PC: \`ros2 launch ar_robot_controller ar_controller.launch.py\`"
+            echo "2. Robot PC: \`python3 -m http.server 8080\` (web_app folder)"
+            echo "3. Android: Install APK → Open → Enter Robot IP → Connect"
+            echo ""
+            echo "### 📋 Requirements"
+            echo "- Android 7.0+ (API 24)"
+            echo "- Same WiFi network as Robot PC"
+            echo "- ROS2 Humble + rosbridge_suite on Robot PC"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Android App ${{ steps.version.outputs.version }}"
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+          files: |
+            android_app/ARRobotController-${{ steps.version.outputs.version }}-debug.apk
+            android_app/ARRobotController-${{ steps.version.outputs.version }}-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "## ✅ Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${VERSION} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tag | ${{ steps.version.outputs.tag }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debug APK | ARRobotController-${VERSION}-debug.apk |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release APK | ARRobotController-${VERSION}-release.apk |" >> $GITHUB_STEP_SUMMARY
