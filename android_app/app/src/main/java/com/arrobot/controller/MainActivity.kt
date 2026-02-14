@@ -103,24 +103,12 @@ class MainActivity : AppCompatActivity() {
     // ============================================
 
     private fun setupButtons() {
-        // Settings button
+        // Settings button (only native button — all other controls are in the web app)
         binding.btnSettings.setOnClickListener {
             val intent = Intent(this, ConnectionActivity::class.java)
             intent.putExtra("from_settings", true)
             @Suppress("DEPRECATION")
             startActivityForResult(intent, SETTINGS_REQUEST_CODE)
-        }
-
-        // Refresh button
-        binding.btnRefresh.setOnClickListener {
-            loadApp()
-            vibrate()
-        }
-
-        // Emergency stop button (native)
-        binding.btnEmergencyStop.setOnClickListener {
-            sendEmergencyStop()
-            vibrate()
         }
     }
 
@@ -268,19 +256,6 @@ class MainActivity : AppCompatActivity() {
         """.trimIndent()
 
         binding.webView.evaluateJavascript(js, null)
-    }
-
-    private fun sendEmergencyStop() {
-        val js = """
-            (function() {
-                if (typeof toggleEmergencyStop === 'function') {
-                    toggleEmergencyStop();
-                }
-            })();
-        """.trimIndent()
-        binding.webView.evaluateJavascript(js, null)
-
-        Toast.makeText(this, "⚠️ Emergency Stop!", Toast.LENGTH_SHORT).show()
     }
 
     private fun showConnectionError() {

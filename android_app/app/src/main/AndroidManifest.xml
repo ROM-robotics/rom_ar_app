@@ -41,7 +41,7 @@
             android:name=".MainActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="portrait"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.ARRobotController.Fullscreen"
             android:keepScreenOn="true" />
 

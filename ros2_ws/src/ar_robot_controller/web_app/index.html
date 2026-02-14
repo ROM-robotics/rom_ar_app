@@ -53,10 +53,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 12px;
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(10px);
-            font-size: 14px;
+            font-size: 12px;
+            height: 36px;
         }
 
         .status-indicator {
@@ -78,15 +79,15 @@
         /* Gesture Display */
         #gesture-display {
             position: fixed;
-            top: 60px; left: 50%;
+            top: 42px; left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            padding: 12px 24px;
-            background: rgba(0, 0, 0, 0.8);
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
+            border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
             text-align: center;
             transition: all 0.3s;
@@ -95,14 +96,14 @@
         /* Virtual Joystick */
         #joystick-container {
             position: fixed;
-            bottom: 40px; right: 40px;
+            bottom: 20px; right: 20px;
             z-index: 10;
-            width: 180px; height: 180px;
+            width: 150px; height: 150px;
             pointer-events: auto;
         }
 
         #joystick-base {
-            width: 180px; height: 180px;
+            width: 150px; height: 150px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(0, 200, 255, 0.5);
@@ -128,15 +129,15 @@
         /* Velocity Display */
         #velocity-display {
             position: fixed;
-            bottom: 40px; left: 20px;
+            bottom: 10px; left: 10px;
             z-index: 10;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
+            border-radius: 8px;
             border: 1px solid rgba(0, 200, 255, 0.3);
             font-family: 'Courier New', monospace;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         .vel-row {
@@ -161,18 +162,20 @@
         /* Control Mode Toggle */
         #mode-toggle {
             position: fixed;
-            top: 60px; right: 20px;
+            top: 42px; right: 10px;
             z-index: 10;
             pointer-events: auto;
+            display: flex;
+            gap: 4px;
         }
 
         .toggle-btn {
-            padding: 10px 16px;
-            background: rgba(0, 0, 0, 0.8);
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.7);
             border: 1px solid rgba(0, 200, 255, 0.5);
             border-radius: 8px;
             color: #fff;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -185,19 +188,19 @@
         /* Emergency Stop Button */
         #emergency-stop {
             position: fixed;
-            bottom: 40px; left: 50%;
+            bottom: 20px; left: 50%;
             transform: translateX(-50%);
             z-index: 10;
             pointer-events: auto;
-            width: 80px; height: 80px;
+            width: 64px; height: 64px;
             border-radius: 50%;
             background: radial-gradient(circle, #ef4444, #991b1b);
             border: 3px solid #fca5a5;
             color: white;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
