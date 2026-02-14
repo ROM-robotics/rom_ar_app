@@ -50,6 +50,9 @@ jobs:
           echo "✅ versionName=$VERSION, versionCode=$VERSION_CODE"
           grep -E "version(Code|Name)" app/build.gradle.kts
 
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
