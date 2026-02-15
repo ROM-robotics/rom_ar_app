@@ -20,12 +20,6 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Install web app
-install(DIRECTORY
-  web_app
-  DESTINATION share/${PROJECT_NAME}
-)
-
 # Install config
 install(DIRECTORY
   config

@@ -95,36 +95,16 @@ source install/setup.bash
 ros2 launch ar_robot_controller ar_controller.launch.py
 ```
 
-### Terminal 2 — Launch Web Server
+### Terminal 2 — Open Android App
+
+Android app ကို ဖွင့်ပြီး Robot IP ထည့်ပါ။ Web app က Android app ထဲမှာ bundled ဖြစ်နေလို့ HTTP server မလိုပါ။
+
+### Terminal 3 — (Optional) Robot Simulation
 
 ```bash
-# Option A: Using launch file
-ros2 launch ar_robot_controller web_server.launch.py
-
-# Option B: Manual
-cd ~/Desktop/rom_ar_app/ros2_ws/src/ar_robot_controller/web_app
-python3 -m http.server 8080
+export TURTLEBOT3_MODEL=burger
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
-
-### Terminal 3 — Open on Phone/Browser
-
-```
-# Same network ထဲက ဖုန်း browser မှာ ဖွင့်ပါ
-# HTTPS required for camera access on mobile!
-
-http://<ROBOT_PC_IP>:8080
-```
-
-> **Note**: ဖုန်းက camera access ရဖို့ HTTPS လိုပါတယ်။ Development အတွက်:
-> ```bash
-> # Option 1: mkcert (recommended)
-> mkcert -install
-> mkcert localhost <YOUR_IP>
-> # Then use a simple HTTPS server
->
-> # Option 2: ngrok
-> ngrok http 8080
-> ```
 
 ## ROS2 Topics
 
@@ -177,12 +157,11 @@ ar_robot_controller/
 ├── config/
 │   └── params.yaml              # Tunable parameters
 ├── launch/
-│   ├── ar_controller.launch.py  # Main launch (rosbridge + nodes)
-│   └── web_server.launch.py     # HTTP server for web app
+│   └── ar_controller.launch.py  # Main launch (rosbridge + nodes)
 ├── scripts/
 │   ├── gesture_controller_node.py  # Gesture → cmd_vel
 │   └── lidar_relay_node.py         # LiDAR → web format
-└── web_app/
+└── web_app/                         # Bundled in Android app assets
     ├── index.html               # Main AR interface
     └── js/
         ├── app.js               # App orchestrator

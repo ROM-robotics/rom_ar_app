@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Robot Controller - ROM-Dynamics Co.,Ltd</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #video-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        #camera-feed {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        #hand-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+
+        #ar-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Status Bar */
+        #status-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            height: 36px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            transition: background 0.3s;
+        }
+
+        .status-dot.connected { background: #22c55e; }
+        .status-dot.warning { background: #f59e0b; }
+
+        /* Gesture Display */
+        #gesture-display {
+            position: fixed;
+            top: 42px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        /* Virtual Joystick */
+        #joystick-container {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            z-index: 10;
+            width: 150px; height: 150px;
+            pointer-events: auto;
+        }
+
+        #joystick-base {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            position: relative;
+        }
+
+        #joystick-handle {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.8), rgba(0, 100, 200, 0.6));
+            border: 2px solid rgba(0, 200, 255, 0.9);
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+            transition: box-shadow 0.2s;
+        }
+
+        #joystick-handle.active {
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.8);
+        }
+
+        /* Velocity Display */
+        #velocity-display {
+            position: fixed;
+            bottom: 10px; left: 10px;
+            z-index: 10;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .vel-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 4px 0;
+        }
+
+        .vel-label { color: #888; }
+        .vel-value { color: #00c8ff; font-weight: bold; }
+
+        /* LiDAR Canvas */
+        #lidar-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Control Mode Toggle */
+        #mode-toggle {
+            position: fixed;
+            top: 42px; right: 10px;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            gap: 4px;
+        }
+
+        .toggle-btn {
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn:hover, .toggle-btn.active {
+            background: rgba(0, 200, 255, 0.3);
+            border-color: #00c8ff;
+        }
+
+        /* Emergency Stop Button */
+        #emergency-stop {
+            position: fixed;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: auto;
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ef4444, #991b1b);
+            border: 3px solid #fca5a5;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        #emergency-stop:active {
+            transform: translateX(-50%) scale(0.95);
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.8);
+        }
+
+        #emergency-stop.stopped {
+            background: radial-gradient(circle, #22c55e, #166534);
+            border-color: #86efac;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        }
+
+        /* Settings Panel */
+        #settings-panel {
+            position: fixed;
+            top: 100px; right: 20px;
+            z-index: 10;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            pointer-events: auto;
+            min-width: 240px;
+        }
+
+        #settings-panel.show { display: block; }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .setting-row input[type="range"] {
+            width: 100px;
+            accent-color: #00c8ff;
+        }
+
+        .setting-row input[type="text"] {
+            width: 140px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        /* Gesture Guide */
+        #gesture-guide {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            padding: 32px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            display: none;
+            pointer-events: auto;
+            max-width: 360px;
+        }
+
+        #gesture-guide.show { display: block; }
+
+        .guide-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            color: #00c8ff;
+        }
+
+        .guide-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .guide-emoji { font-size: 28px; }
+
+        .close-btn {
+            margin-top: 16px;
+            padding: 8px 24px;
+            background: rgba(0, 200, 255, 0.2);
+            border: 1px solid #00c8ff;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Hand Landmark Colors */
+        .landmark-line { stroke: #00c8ff; stroke-width: 3; }
+        .landmark-point { fill: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <!-- Camera Feed -->
+    <div id="video-container">
+        <video id="camera-feed" autoplay playsinline></video>
+    </div>
+
+    <!-- Hand Tracking Overlay -->
+    <canvas id="hand-canvas"></canvas>
+
+    <!-- LiDAR Visualization -->
+    <canvas id="lidar-canvas"></canvas>
+
+    <!-- AR Overlay (Three.js) -->
+    <canvas id="ar-overlay"></canvas>
+
+    <!-- Status Bar -->
+    <div id="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot" id="ros-status"></div>
+            <span id="ros-status-text">Disconnected</span>
+        </div>
+        <div class="status-indicator">
+            <div class="status-dot" id="hand-status"></div>
+            <span id="hand-status-text">No Hand</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="toggle-btn" onclick="toggleSettings()">⚙️</button>
+            <button class="toggle-btn" onclick="toggleGuide()">❓</button>
+        </div>
+    </div>
+
+    <!-- Gesture Display -->
+    <div id="gesture-display">🤖 Waiting for hand...</div>
+
+    <!-- Control Mode Toggle -->
+    <div id="mode-toggle">
+        <button class="toggle-btn active" id="btn-gesture" onclick="setMode('gesture')">✋ Gesture</button>
+        <button class="toggle-btn" id="btn-joystick" onclick="setMode('joystick')">🕹️ Joystick</button>
+    </div>
+
+    <!-- Virtual Joystick -->
+    <div id="joystick-container" style="display: none;">
+        <div id="joystick-base">
+            <div id="joystick-handle"></div>
+        </div>
+    </div>
+
+    <!-- Velocity Display -->
+    <div id="velocity-display">
+        <div class="vel-row">
+            <span class="vel-label">Linear:</span>
+            <span class="vel-value" id="linear-vel">0.000 m/s</span>
+        </div>
+        <div class="vel-row">
+            <span class="vel-label">Angular:</span>
+            <span class="vel-value" id="angular-vel">0.000 rad/s</span>
+        </div>
+        <div class="vel-row">
+            <span class="vel-label">Mode:</span>
+            <span class="vel-value" id="mode-display">Gesture</span>
+        </div>
+    </div>
+
+    <!-- Emergency Stop -->
+    <button id="emergency-stop" onclick="toggleEmergencyStop()">E-STOP</button>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel">
+        <h3 style="margin-bottom: 12px; color: #00c8ff;">Settings</h3>
+        <div class="setting-row">
+            <span>ROS Bridge URL:</span>
+        </div>
+        <div class="setting-row">
+            <input type="text" id="ros-url" value="ws://localhost:9090" 
+                   onchange="reconnectROS()">
+        </div>
+        <div class="setting-row">
+            <span>Max Speed:</span>
+            <input type="range" id="max-speed" min="0.1" max="1.0" step="0.1" value="0.5"
+                   oninput="updateMaxSpeed(this.value)">
+            <span id="speed-val">0.5</span>
+        </div>
+        <div class="setting-row">
+            <span>Show LiDAR:</span>
+            <input type="checkbox" id="show-lidar" checked onchange="toggleLidar()">
+        </div>
+        <div class="setting-row">
+            <span>Show Hand:</span>
+            <input type="checkbox" id="show-hand" checked onchange="toggleHand()">
+        </div>
+    </div>
+
+    <!-- Gesture Guide -->
+    <div id="gesture-guide">
+        <div class="guide-title">🤖 Hand Gesture Guide</div>
+        <div class="guide-item">
+            <span class="guide-emoji">☝️</span>
+            <span>Index finger point → <b>Forward</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">✌️</span>
+            <span>Two fingers (V) → <b>Backward</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">✊</span>
+            <span>Fist → <b>Stop</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">👈</span>
+            <span>Thumb left → <b>Turn Left</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">👉</span>
+            <span>Thumb right → <b>Turn Right</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">🤏</span>
+            <span>Pinch → <b>Speed Control</b></span>
+        </div>
+        <div class="guide-item">
+            <span class="guide-emoji">🖐️</span>
+            <span>Open hand → <b>Emergency Stop</b></span>
+        </div>
+        <button class="close-btn" onclick="toggleGuide()">Got it!</button>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/gesture_recognizer.js"></script>
+    <script src="js/ros_bridge.js"></script>
+    <script src="js/virtual_joystick.js"></script>
+    <script src="js/lidar_visualizer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

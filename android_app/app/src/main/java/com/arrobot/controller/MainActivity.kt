@@ -44,10 +44,9 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "ar_robot_prefs"
         private const val KEY_ROBOT_IP = "robot_ip"
         private const val KEY_WS_PORT = "ws_port"
-        private const val KEY_WEB_PORT = "web_port"
         private const val DEFAULT_ROBOT_IP = "192.168.1.100"
         private const val DEFAULT_WS_PORT = "9090"
-        private const val DEFAULT_WEB_PORT = "8080"
+        private const val LOCAL_WEB_APP_URL = "file:///android_asset/web_app/index.html"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,6 +126,10 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             allowContentAccess = true
             allowFileAccess = true
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = true
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = true
             databaseEnabled = true
             setSupportMultipleWindows(false)
             loadWithOverviewMode = true
@@ -225,11 +228,8 @@ class MainActivity : AppCompatActivity() {
         binding.loadingOverlay.visibility = View.VISIBLE
         binding.errorOverlay.visibility = View.GONE
 
-        val robotIp = prefs.getString(KEY_ROBOT_IP, DEFAULT_ROBOT_IP) ?: DEFAULT_ROBOT_IP
-        val webPort = prefs.getString(KEY_WEB_PORT, DEFAULT_WEB_PORT) ?: DEFAULT_WEB_PORT
-
-        val url = "http://$robotIp:$webPort"
-        binding.webView.loadUrl(url)
+        // Load web app from local assets (no HTTP server needed)
+        binding.webView.loadUrl(LOCAL_WEB_APP_URL)
     }
 
     private fun injectConnectionConfig() {

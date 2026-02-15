@@ -85,26 +85,6 @@
                     android:text="9090" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Web Server Port -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/layoutWebPort"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="@string/hint_web_port"
-                app:boxStrokeColor="@color/accent_cyan"
-                app:hintTextColor="@color/accent_cyan">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editWebPort"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:textColor="@color/white"
-                    android:text="8080" />
-            </com.google.android.material.textfield.TextInputLayout>
-
             <!-- Preview -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -136,7 +116,7 @@
                         android:fontFamily="monospace"
                         android:textColor="@color/accent_cyan"
                         android:textSize="13sp"
-                        android:text="Web App: http://192.168.1.100:8080\nROS Bridge: ws://192.168.1.100:9090" />
+                        android:text="Web App: Local (bundled in app)\nROS Bridge: ws://192.168.1.100:9090" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

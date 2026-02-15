@@ -25,10 +25,8 @@ class ConnectionActivity : AppCompatActivity() {
         private const val PREFS_NAME = "ar_robot_prefs"
         private const val KEY_ROBOT_IP = "robot_ip"
         private const val KEY_WS_PORT = "ws_port"
-        private const val KEY_WEB_PORT = "web_port"
         private const val DEFAULT_ROBOT_IP = "192.168.1.100"
         private const val DEFAULT_WS_PORT = "9090"
-        private const val DEFAULT_WEB_PORT = "8080"
     }
 
     // Track whether this was launched from MainActivity settings
@@ -76,9 +74,6 @@ class ConnectionActivity : AppCompatActivity() {
         binding.editWsPort.setText(
             prefs.getString(KEY_WS_PORT, DEFAULT_WS_PORT)
         )
-        binding.editWebPort.setText(
-            prefs.getString(KEY_WEB_PORT, DEFAULT_WEB_PORT)
-        )
 
         updatePreview()
     }
@@ -86,7 +81,6 @@ class ConnectionActivity : AppCompatActivity() {
     private fun saveSettings() {
         val ip = binding.editRobotIp.text.toString().trim()
         val wsPort = binding.editWsPort.text.toString().trim()
-        val webPort = binding.editWebPort.text.toString().trim()
 
         // Validate
         if (ip.isEmpty()) {
@@ -97,21 +91,15 @@ class ConnectionActivity : AppCompatActivity() {
             binding.layoutWsPort.error = "WebSocket port is required"
             return
         }
-        if (webPort.isEmpty()) {
-            binding.layoutWebPort.error = "Web port is required"
-            return
-        }
 
         // Clear errors
         binding.layoutRobotIp.error = null
         binding.layoutWsPort.error = null
-        binding.layoutWebPort.error = null
 
         // Save
         prefs.edit()
             .putString(KEY_ROBOT_IP, ip)
             .putString(KEY_WS_PORT, wsPort)
-            .putString(KEY_WEB_PORT, webPort)
             .apply()
 
         Toast.makeText(this, "✅ Settings saved!", Toast.LENGTH_SHORT).show()
@@ -131,7 +119,6 @@ class ConnectionActivity : AppCompatActivity() {
     private fun resetDefaults() {
         binding.editRobotIp.setText(DEFAULT_ROBOT_IP)
         binding.editWsPort.setText(DEFAULT_WS_PORT)
-        binding.editWebPort.setText(DEFAULT_WEB_PORT)
         updatePreview()
 
         Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
@@ -139,7 +126,6 @@ class ConnectionActivity : AppCompatActivity() {
 
     private fun testConnection() {
         val ip = binding.editRobotIp.text.toString().trim()
-        val webPort = binding.editWebPort.text.toString().trim()
 
         binding.btnTestConnection.isEnabled = false
         binding.btnTestConnection.text = "Testing..."
@@ -173,10 +159,9 @@ class ConnectionActivity : AppCompatActivity() {
     private fun updatePreview() {
         val ip = binding.editRobotIp.text.toString().trim()
         val wsPort = binding.editWsPort.text.toString().trim()
-        val webPort = binding.editWebPort.text.toString().trim()
 
         binding.textPreview.text =
-            "Web App: http://$ip:$webPort\nROS Bridge: ws://$ip:$wsPort"
+            "Web App: Local (bundled in app)\nROS Bridge: ws://$ip:$wsPort"
     }
 
     override fun onSupportNavigateUp(): Boolean {

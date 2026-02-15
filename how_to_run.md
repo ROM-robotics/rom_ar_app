@@ -56,7 +56,7 @@ chmod +x src/ar_robot_controller/scripts/lidar_relay_node.py
 
 ---
 
-## 3. Run ပုံ (Terminal ၃ ခု လိုပါမယ်)
+## 3. Run ပုံ (Terminal ၁ ခု လိုပါမယ်)
 
 ### Terminal 1 — AR Controller Launch (ROS2 nodes + rosbridge)
 
@@ -82,20 +82,7 @@ ros2 launch ar_robot_controller ar_controller.launch.py \
     port:=9090
 ```
 
-### Terminal 2 — Web Server (AR App serve လုပ်ခြင်း)
-
-```bash
-# Option A: Launch file သုံးပြီး
-cd ~/Desktop/rom_ar_app/ros2_ws
-source install/setup.bash
-ros2 launch ar_robot_controller web_server.launch.py
-
-# Option B: Manual (development အတွက် ပိုအဆင်ပြေ)
-cd ~/Desktop/rom_ar_app/ros2_ws/src/ar_robot_controller/web_app
-python3 -m http.server 8080
-```
-
-### Terminal 3 — (Optional) Robot Simulation ဖွင့်ခြင်း
+### Terminal 2 — (Optional) Robot Simulation ဖွင့်ခြင်း
 
 ```bash
 # TurtleBot3 simulation ကို test အတွက် သုံးလို့ရပါတယ်
@@ -105,7 +92,9 @@ ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 
 ---
 
-## 4. ဖုန်း/Browser ဘက်မှာ ဖွင့်ခြင်း
+## 4. Android App ဖွင့်ခြင်း
+
+Web app က Android app ထဲမှာ bundled ဖြစ်နေလို့ HTTP server မလိုပါ။
 
 ### 4.1 Robot PC ရဲ့ IP ကို ရှာပါ
 
@@ -115,60 +104,19 @@ hostname -I
 # ဥပမာ: 192.168.1.100
 ```
 
-### 4.2 ဖုန်း Browser မှာ ဖွင့်ပါ
+### 4.2 Android App ဖွင့်ပါ
 
-```
-http://192.168.1.100:8080
-```
-
-> ⚠️ **အရေးကြီး**: ဖုန်းနဲ့ Robot PC က **တူညီတဲ့ WiFi network** ထဲမှာ ရှိရပါမယ်!
+1. **ဖုန်းမှာ App ဖွင့်ပါ** → "AR Robot Controller" icon
+2. **Robot IP ထည့်ပါ** → Connection Settings မှာ
+3. **WebSocket Port** → 9090 (ပုံမှန်)
+4. **Test Connection** → Robot PC reachable ဖြစ်/ မဖြစ် စစ်ပါ
+5. **Save & Connect** → AR controller ကို auto-load လုပ်ပါမယ်
 
 ### 4.3 Camera Permission
 
 ဖုန်းက Camera access တောင်းလာရင် **Allow** ပေးပါ။ Hand tracking အတွက် camera လိုပါတယ်။
 
-### 4.4 HTTPS Setup (Mobile Camera Access)
-
-Mobile browser တွေက camera access ကို HTTPS မှာသာ ခွင့်ပြုပါတယ် (`localhost` ကလွဲပြီး)။
-
-```bash
-# ============ Option A: mkcert (Recommended) ============
-# mkcert install
-sudo apt install libnss3-tools
-curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-chmod +x mkcert-v*-linux-amd64
-sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
-
-# Certificate generate
-mkcert -install
-mkcert localhost 192.168.1.100  # ← သင့် IP ထည့်ပါ
-
-# HTTPS server run (python)
-pip3 install twisted
-cd ~/Desktop/rom_ar_app/ros2_ws/src/ar_robot_controller/web_app
-python3 -c "
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import ssl
-server = HTTPServer(('0.0.0.0', 8443), SimpleHTTPRequestHandler)
-ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ctx.load_cert_chain('./localhost+1.pem', './localhost+1-key.pem')
-server.socket = ctx.wrap_socket(server.socket, server_side=True)
-print('HTTPS server: https://0.0.0.0:8443')
-server.serve_forever()
-"
-# ဖုန်းမှာ https://192.168.1.100:8443 ဖွင့်ပါ
-
-# ============ Option B: ngrok (အလွယ်ဆုံး) ============
-# ngrok install: https://ngrok.com/download
-ngrok http 8080
-# ngrok ပေးတဲ့ https://xxxxx.ngrok.io URL ကို ဖုန်းမှာ ဖွင့်ပါ
-
-# ============ Option C: Chrome flag (Development only) ============
-# ဖုန်း Chrome မှာ:
-# chrome://flags/#unsafely-treat-insecure-origin-as-secure
-# "Insecure origins treated as secure" ကိုဖွင့်ပြီး
-# http://192.168.1.100:8080 ကို ထည့်ပါ
-```
+> ⚠️ **အရေးကြီး**: ဖုန်းနဲ့ Robot PC က **တူညီတဲ့ WiFi network** ထဲမှာ ရှိရပါမယ်!
 
 ---
 
@@ -247,11 +195,9 @@ ros2 topic list | grep rosbridge
 
 # Firewall စစ်ပါ
 sudo ufw allow 9090
-sudo ufw allow 8080
 
 # WebSocket port test
-# ဖုန်း browser console မှာ:
-# new WebSocket('ws://192.168.1.100:9090')
+# Android app မှာ Connection Settings က Robot IP မှန်သလား စစ်ပါ
 ```
 
 ### ❌ Camera ဖွင့်လို့မရဘူး
@@ -300,11 +246,7 @@ ros2 node list | grep lidar
 cd ~/Desktop/rom_ar_app/ros2_ws && source install/setup.bash
 ros2 launch ar_robot_controller ar_controller.launch.py
 
-# Terminal 2: Web server
-cd ~/Desktop/rom_ar_app/ros2_ws/src/ar_robot_controller/web_app
-python3 -m http.server 8080
-
-# Phone: http://<ROBOT_IP>:8080
+# Android App: Install APK → Open → Enter Robot IP → Connect
 ```
 
 ---
@@ -323,13 +265,12 @@ python3 -m http.server 8080
 | `web_app/js/app.js` | Main app orchestrator |
 | `config/params.yaml` | Tunable parameters (speed, deadzone, etc.) |
 | `launch/ar_controller.launch.py` | Main launch file (rosbridge + nodes) |
-| `launch/web_server.launch.py` | Web app HTTP server launch |
 
 ---
 
-## 10. Android App အနေနဲ့ သုံးခြင်း 📱
+## 10. Android App 📱
 
-Browser မှာ ဖွင့်မယ့်အစား **Native Android App** အနေနဲ့လည်း သုံးလို့ရပါတယ်။
+**Native Android App** အနေနဲ့ သုံးပါ။ Web app က Android app ထဲမှာ bundled ဖြစ်နေလို့ HTTP server မလိုပါ။
 
 ### Android App Features (Browser ထက် ပိုကောင်းတဲ့အချက်များ)
 
@@ -371,9 +312,9 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 1. **ဖုန်းမှာ App ဖွင့်ပါ** → "AR Robot Controller" icon
 2. **Camera Permission** → Allow ပေးပါ
-3. **Connection Failed ပေါ်ရင်** → Settings icon (⚙️) နှိပ်ပြီး Robot IP ထည့်ပါ
+3. **Robot IP ထည့်ပါ** → Settings icon (⚙️) နှိပ်ပြီး Robot IP ထည့်ပါ
 4. **Test Connection** → Robot PC reachable ဖြစ်/ မဖြစ် စစ်ပါ
-5. **Save & Connect** → Web app ကို auto-load လုပ်ပါမယ်
+5. **Save & Connect** → AR controller ကို auto-load လုပ်ပါမယ်
 
 ### 10.4 Android App Project Structure
 
@@ -387,6 +328,10 @@ android_app/
     ├── proguard-rules.pro                   # Release obfuscation rules
     └── src/main/
         ├── AndroidManifest.xml              # Permissions & activities
+        ├── assets/
+        │   └── web_app/                     # Bundled web app (no server needed)
+        │       ├── index.html
+        │       └── js/
         ├── java/com/arrobot/controller/
         │   ├── MainActivity.kt              # WebView + fullscreen + camera
         │   ├── ConnectionActivity.kt        # Robot IP/port settings

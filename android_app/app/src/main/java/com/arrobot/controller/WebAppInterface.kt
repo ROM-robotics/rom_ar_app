@@ -85,11 +85,6 @@ class WebAppInterface(private val context: Context) {
     }
 
     @JavascriptInterface
-    fun getWebPort(): String {
-        return prefs.getString("web_port", "8080") ?: "8080"
-    }
-
-    @JavascriptInterface
     fun getROSBridgeURL(): String {
         val ip = getRobotIP()
         val port = getWSPort()
@@ -97,11 +92,10 @@ class WebAppInterface(private val context: Context) {
     }
 
     @JavascriptInterface
-    fun saveSettings(robotIp: String, wsPort: String, webPort: String) {
+    fun saveSettings(robotIp: String, wsPort: String) {
         prefs.edit()
             .putString("robot_ip", robotIp)
             .putString("ws_port", wsPort)
-            .putString("web_port", webPort)
             .apply()
     }
 
